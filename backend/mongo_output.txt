@@ -1,0 +1,86 @@
+Connected to MongoDB
+Found 42 products:
+- Oil Pastels (25 Colors) (Art & Craft)
+  Img 0: https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=600
+- Stapler with 1000 Staples (Office Supplies)
+  Img 0: https://images.unsplash.com/photo-1618077360395-f3068be8e001?w=600
+- A4 Paper Ream (500 Sheets) (Paper Products)
+  Img 0: https://images.unsplash.com/photo-1568667256549-094345857637?w=600
+- Velcro Cable Ties (Pack of 20) (Office Supplies)
+  Img 0: https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=600
+- Hair Clips Assorted (Pack of 20) (Office Supplies)
+  Img 0: https://images.unsplash.com/photo-1522338242992-e1a54906a8da?w=600
+- Index Cards (100 Pack, Ruled) (Paper Products)
+  Img 0: https://images.unsplash.com/photo-1544396821-4bc158d290b3?w=600
+- Pencil Box (Metal, Magnetic Lock) (Office Supplies)
+  Img 0: https://images.unsplash.com/photo-1519682337058-a94d519337bc?w=600
+- Letter File Folder (A4, Pack of 5) (Filing & Storage)
+  Img 0: https://images.unsplash.com/photo-1568667256549-094345857637?w=600
+- Ball Pen Blue (Pack of 10) (Writing Instruments)
+  Img 0: https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?w=600
+- Eraser (White Vinyl, Pack of 5) (Writing Instruments)
+  Img 0: https://images.unsplash.com/photo-1544239265-ee5eedde4a2b?w=600
+- Mechanical Pencil (0.5mm, Pack of 3) (Writing Instruments)
+  Img 0: https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?w=600
+- Xtra Wide Sticky Notes (5x5 inch, 4 Pads) (Paper Products)
+  Img 0: https://images.unsplash.com/photo-1544396821-4bc158d290b3?w=600
+- Correction Pen (White-out) (Office Supplies)
+  Img 0: https://images.unsplash.com/photo-1606189934846-a527add8a77b?w=600
+- Fountain Pen with Ink Cartridges (Writing Instruments)
+  Img 0: https://images.unsplash.com/photo-1585336261022-680e295ce3fe?w=600
+- Glue Stick (Pack of 6) (Office Supplies)
+  Img 0: https://images.unsplash.com/photo-1618077360395-f3068be8e001?w=600
+- Watercolor Paint Set (24 Colors) (Art & Craft)
+  Img 0: https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=600
+- Marker Pens Permanent (12 Colors) (Writing Instruments)
+  Img 0: https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600
+- Drawing Compass Set (Art & Craft)
+  Img 0: https://images.unsplash.com/photo-1602080858428-35be98ed7905?w=600
+- Jumbo Binder Clips (Pack of 12) (Office Supplies)
+  Img 0: https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=600
+- Kraft Paper Roll (3 meters) (Art & Craft)
+  Img 0: https://images.unsplash.com/photo-1607344645866-009c320b63e0?w=600
+- Paper Clips (Silver, Box of 100) (Office Supplies)
+  Img 0: https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=600
+- Quick-Dry Ink Stamp Pad (Blue) (Office Supplies)
+  Img 0: https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=600
+- Ruler (30cm Transparent, Pack of 3) (Office Supplies)
+  Img 0: https://images.unsplash.com/photo-1602080858428-35be98ed7905?w=600
+- Notebook A5 Spiral (200 Pages) (Paper Products)
+  Img 0: https://images.unsplash.com/photo-1531346878377-a5be20888e57?w=600
+- Ultrasmooth HB Pencils (Pack of 12) (Writing Instruments)
+  Img 0: https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=600
+- Yellow Highlighter Marker (Pack of 2) (Writing Instruments)
+  Img 0: https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600
+- Zip-Lock Storage Bags (A4 Size, Pack of 50) (Filing & Storage)
+  Img 0: https://images.unsplash.com/photo-1607344645866-009c320b63e0?w=600
+- Scissors (Stainless Steel, 8 inch) (Office Supplies)
+  Img 0: https://images.unsplash.com/photo-1618077360395-f3068be8e001?w=600
+- Highlighter Pens (6 Colors) (Writing Instruments)
+  Img 0: https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600
+- Tape Dispenser with Refill Roll (Office Supplies)
+  Img 0: https://images.unsplash.com/photo-1607344645866-009c320b63e0?w=600
+- Ink Pen Refills (Blue, Pack of 20) (Writing Instruments)
+  Img 0: https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?w=600
+- Crystal Hair Clip (Hair Accessories)
+  Img 0: https://images.unsplash.com/photo-1522338242992-e1a54906a8da?w=600
+- Gold Necklace (Jewellery)
+  Img 0: https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600
+- Leather Handbag (Bags & Purses)
+  Img 0: https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600
+- Luxury Rose Gold Watch (Watches)
+  Img 0: https://images.unsplash.com/photo-1524592091214-8f97ad332c67?w=600
+- Silk Scarf Blue (Scarves & Stoles)
+  Img 0: https://images.unsplash.com/photo-1584030373081-f37b7bb4fa82?w=600
+- Classic Aviators (Sunglasses)
+  Img 0: https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=600
+- Silver Keychain (Keychains)
+  Img 0: https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=600
+- Deluxe Gift Set (Gift Sets)
+  Img 0: https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=600
+- Designer Sunglasses (Sunglasses)
+  Img 0: https://images.unsplash.com/photo-1511499767390-90342f16b147?w=600
+- Scented Candle Set (Gift Sets)
+  Img 0: https://images.unsplash.com/photo-1603006905393-f437648d88da?w=600
+- Embroidered Tote Bag (Bags & Purses)
+  Img 0: https://images.unsplash.com/photo-1544816155-12df9643f363?w=600

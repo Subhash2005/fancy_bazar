@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="gem" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7C3AED"/>
+      <stop offset="100%" style="stop-color:#F59E0B"/>
+    </linearGradient>
+  </defs>
+  <polygon points="32,2 58,16 58,48 32,62 6,48 6,16" fill="url(#gem)"/>
+  <text x="32" y="42" font-family="serif" font-size="26" font-weight="700" fill="white" text-anchor="middle">FB</text>
+</svg>

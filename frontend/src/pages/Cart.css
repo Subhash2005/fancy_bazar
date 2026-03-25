@@ -1,0 +1,353 @@
+.cart-page {
+    padding: var(--space-6) 0 var(--space-12);
+}
+
+.cart-page__title {
+    font-size: 1.6rem;
+    margin-bottom: var(--space-6);
+}
+
+.cart-page__count {
+    font-size: 1rem;
+    font-family: var(--font-body);
+    color: var(--clr-text-muted);
+    font-weight: 400;
+}
+
+.cart-layout {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: var(--space-6);
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .cart-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Empty cart */
+.cart-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+    padding: var(--space-16) var(--space-4);
+    text-align: center;
+}
+
+.cart-empty__icon {
+    font-size: 4rem;
+}
+
+.cart-empty__title {
+    font-size: 1.5rem;
+}
+
+.cart-empty__desc {
+    color: var(--clr-text-muted);
+}
+
+/* Cart items */
+.cart-items {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.cart-item {
+    display: flex;
+    gap: var(--space-4);
+    padding: var(--space-4);
+}
+
+@media (max-width: 480px) {
+    .cart-item {
+        flex-direction: column;
+    }
+}
+
+.cart-item__img-wrap {
+    flex-shrink: 0;
+    width: 110px;
+    height: 110px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--clr-surface-3);
+    display: block;
+}
+
+.cart-item__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cart-item__info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    justify-content: space-between;
+}
+
+.cart-item__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-2);
+}
+
+.cart-item__category {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--clr-primary-light);
+    margin-bottom: 2px;
+}
+
+.cart-item__name {
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--clr-text);
+    margin-bottom: 4px;
+}
+
+.cart-item__name:hover {
+    color: var(--clr-primary-light);
+}
+
+.cart-item__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
+
+.cart-item__variant {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.78rem;
+    color: var(--clr-text-faint);
+}
+
+.cart-item__color-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1px solid var(--clr-border);
+    display: inline-block;
+}
+
+.cart-item__wholesale-badge {
+    font-size: 0.68rem !important;
+}
+
+.cart-item__remove {
+    background: none;
+    border: none;
+    color: var(--clr-text-faint);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.cart-item__remove:hover {
+    color: var(--clr-danger);
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.cart-item__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+}
+
+.cart-item__qty {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.cart-item__price {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+}
+
+.cart-item__total {
+    font-size: 1.1rem;
+    color: var(--clr-text);
+}
+
+.cart-item__unit-price {
+    font-size: 0.78rem;
+    color: var(--clr-text-faint);
+}
+
+/* Donation card */
+.donation-card {
+    padding: var(--space-4);
+    border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+.donation-card__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-3);
+}
+
+.donation-card__title {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--clr-text);
+    margin-bottom: 4px;
+}
+
+.donation-card__desc {
+    font-size: 0.83rem;
+    color: var(--clr-text-muted);
+    line-height: 1.4;
+}
+
+.donation-amounts {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
+
+.donation-amount-btn {
+    padding: 6px 16px;
+    border-radius: var(--radius-full);
+    background: var(--clr-surface-3);
+    border: 1px solid var(--clr-border);
+    color: var(--clr-text-muted);
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.donation-amount-btn:hover {
+    border-color: var(--clr-success);
+    color: var(--clr-success);
+}
+
+.donation-amount-btn.active {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: var(--clr-success);
+    color: var(--clr-success);
+}
+
+/* Summary */
+.cart-summary {
+    position: sticky;
+    top: 84px;
+}
+
+.cart-summary__card {
+    padding: var(--space-5);
+}
+
+.cart-summary__title {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: var(--space-4);
+}
+
+.cart-summary__lines {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.cart-summary__line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.875rem;
+}
+
+.cart-summary__line dt {
+    color: var(--clr-text-muted);
+}
+
+.cart-summary__line dd {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    color: var(--clr-text);
+}
+
+.cart-summary__line--donation dt {
+    color: var(--clr-success);
+}
+
+.cart-summary__line--donation dd {
+    color: var(--clr-success);
+}
+
+.cart-summary__line--total {
+    margin-top: var(--space-2);
+}
+
+.cart-summary__line--total dt {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--clr-text);
+}
+
+.cart-summary__line--total dd {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--clr-text);
+}
+
+.cart-summary__free-shipping-hint {
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    border-radius: var(--radius-md);
+    padding: var(--space-2) var(--space-3);
+    font-size: 0.8rem;
+    color: var(--clr-success);
+    margin: var(--space-3) 0;
+}
+
+.cart-summary__cta {
+    margin-top: var(--space-4);
+}
+
+.cart-payment-badges {
+    margin-top: var(--space-3);
+    padding: var(--space-3);
+    background: var(--clr-surface-2);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius-lg);
+}
+
+.cart-payment-badges__label {
+    font-size: 0.75rem;
+    color: var(--clr-text-faint);
+    margin-bottom: var(--space-2);
+}
+
+.cart-payment-badges__icons {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
