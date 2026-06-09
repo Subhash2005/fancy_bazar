@@ -17,6 +17,9 @@ const shopRoutes = require('./routes/shops')
 
 const app = express()
 
+// Trust proxy for Render/Vercel (required for rate limiting behind reverse proxies)
+app.set('trust proxy', 1)
+
 // ——— Security ———
 app.use(helmet({
     contentSecurityPolicy: {
