@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     phone: { type: String, trim: true, maxlength: 10 },
     passwordHash: { type: String, required: true },
-    role: { type: String, enum: ['retail', 'wholesale', 'admin', 'vendor'], default: 'retail' },
+    role: { type: String, enum: ['retail', 'wholesale', 'admin', 'vendor', 'merchant', 'trader_low', 'trader_bulk'], default: 'retail' },
     // Wholesale fields
     gstNumber: { type: String, uppercase: true },
     businessName: String,

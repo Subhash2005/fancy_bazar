@@ -29,9 +29,12 @@ export default function Cart() {
 
     function handleQty(key, delta, currentQty, buyerType) {
         const newQty = currentQty + delta
-        const min = buyerType === 'wholesale' ? 10 : 1
+        let min = 1
+        if (buyerType === 'wholesale') min = 10
+        if (user?.role === 'merchant') min = 5
+        
         if (newQty < min) {
-            toast.error(`Minimum quantity is ${min}`)
+            toast.error(`Minimum quantity is ${min}${user?.role === 'merchant' ? ' for merchants' : ''}`)
             return
         }
         dispatch(updateQty({ key, qty: newQty }))
@@ -48,13 +51,20 @@ export default function Cart() {
             navigate('/auth/login')
             return
         }
+        if (user.role === 'merchant' && breakdown.total < 2500) {
+            toast.error('Merchants require a minimum order value of ₹2500.')
+            return
+        }
         navigate('/checkout')
     }
 
     return (
         <div className="cart-page">
             <div className="container">
-                <h1 className="cart-page__title">Shopping Cart <span className="cart-page__count">({items.length} items)</span></h1>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+                    <button onClick={() => navigate(-1)} className="btn btn-ghost btn-sm" style={{ padding: '0 8px', height: '24px', minHeight: 'auto', display: 'flex', alignItems: 'center' }}>← Back</button>
+                    <h1 className="cart-page__title" style={{ margin: 0 }}>Shopping Cart <span className="cart-page__count">({items.length} items)</span></h1>
+                </div>
 
                 <div className="cart-layout">
                     {/* ===== CART ITEMS ===== */}
@@ -206,9 +216,16 @@ export default function Cart() {
                                 </p>
                             )}
 
+                            {user?.role === 'merchant' && breakdown.total < 2500 && (
+                                <p className="cart-summary__free-shipping-hint" style={{ color: 'var(--clr-danger)', marginTop: 8 }}>
+                                    Add {formatINR(2500 - breakdown.total)} more to meet the Merchant Minimum Order Value (₹2500)
+                                </p>
+                            )}
+
                             <button
                                 className="btn btn-primary btn-lg btn-full cart-summary__cta"
                                 onClick={handleCheckout}
+                                disabled={user?.role === 'merchant' && breakdown.total < 2500}
                                 id="proceed-checkout-btn"
                             >
                                 Proceed to Checkout <FiArrowRight />

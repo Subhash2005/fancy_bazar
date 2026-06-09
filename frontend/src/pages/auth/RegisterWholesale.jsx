@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { registerUser } from '../../store/slices/authSlice'
 import toast from 'react-hot-toast'
@@ -8,18 +8,33 @@ import './Auth.css'
 export default function RegisterWholesale() {
     const dispatch = useDispatch()
     const navigate = useNavigate()
+    const [searchParams] = useSearchParams()
     const { loading } = useSelector(state => state.auth)
 
+    // 'merchant' or 'trader'
+    const initialType = searchParams.get('type') === 'trader' ? 'trader' : 'merchant'
+    const [regType, setRegType] = useState(initialType)
     const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', businessName: '', gstNumber: '', businessType: '', businessAddress: '' })
+    
     const set = (f) => e => setForm(prev => ({ ...prev, [f]: e.target.value }))
 
     async function handleSubmit(e) {
         e.preventDefault()
         if (!/^[A-Za-z0-9]{15}$/.test(form.gstNumber)) { toast.error('Please enter a valid 15-character GST number'); return }
-        const userRole = form.businessType === 'market_owner' ? 'vendor' : 'wholesale';
+        
+        let userRole = 'merchant';
+        if (regType === 'merchant') {
+            userRole = 'merchant'; // Always merchant for buyers
+        } else if (regType === 'trader') {
+            if (form.businessType === 'market_owner') userRole = 'vendor';
+            else if (form.businessType === 'low_level_trader') userRole = 'trader_low';
+            else if (form.businessType === 'bulk_trader') userRole = 'trader_bulk';
+            else userRole = 'vendor'; // fallback
+        }
+
         const result = await dispatch(registerUser({ ...form, role: userRole }))
         if (result.meta.requestStatus === 'fulfilled') {
-            toast.success('Merchant account created! 🏪 Welcome to FancyBazaar')
+            toast.success(`${regType === 'merchant' ? 'Merchant' : 'Trader'} account created! 🏪 Welcome to FancyBazaar`)
             navigate('/')
         } else {
             toast.error(result.payload || 'Registration failed. Please try again.')
@@ -37,16 +52,27 @@ export default function RegisterWholesale() {
                     </svg>
                     <span className="auth-brand">FancyBazaar</span>
                 </div>
+                
                 <div className="auth-wholesale-header">
-                    <span className="badge badge-accent" style={{ fontSize: '0.85rem', padding: '4px 14px' }}>🏪 Merchant Registration</span>
-                    <h1 className="auth-title">Merchant Account</h1>
-                    <p className="auth-subtitle">Get bulk pricing or start selling as a vendor</p>
-                </div>
+                    <div className="buyer-toggle" style={{ margin: '0 auto 1.5rem', display: 'flex', width: 'fit-content' }}>
+                        <button
+                            type="button"
+                            className={`buyer-toggle__btn${regType === 'merchant' ? ' active' : ''}`}
+                            onClick={() => { setRegType('merchant'); setForm({ ...form, businessType: '' }) }}
+                        >🛍️ Register as Merchant (Buyer)</button>
+                        <button
+                            type="button"
+                            className={`buyer-toggle__btn${regType === 'trader' ? ' active' : ''}`}
+                            onClick={() => { setRegType('trader'); setForm({ ...form, businessType: '' }) }}
+                        >🏪 Register as Trader (Seller)</button>
+                    </div>
 
-                <div className="wholesale-perks">
-                    <div className="wholesale-perk">🏪 Sell products as a Market Owner directly</div>
-                    <div className="wholesale-perk">🔹 Buy at mid tier — 15% off (10-49 units)</div>
-                    <div className="wholesale-perk">🔸 Buy at high tier — 30% off (50+ units)</div>
+                    <h1 className="auth-title">{regType === 'merchant' ? 'Merchant Account' : 'Trader Account'}</h1>
+                    <p className="auth-subtitle">
+                        {regType === 'merchant' 
+                            ? 'Get bulk pricing and exclusive discounts. Requires minimum 5 quantity per item.' 
+                            : 'Open your own shop, manage inventory, and sell your products to thousands of buyers.'}
+                    </p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="auth-form auth-form--wide" noValidate>
@@ -84,10 +110,19 @@ export default function RegisterWholesale() {
                             <label className="form-label" htmlFor="ws-btype">Business Type *</label>
                             <select id="ws-btype" className="form-input" value={form.businessType} onChange={set('businessType')} required>
                                 <option value="">Select type</option>
-                                <option value="retail_shop">Retail Shop</option>
-                                <option value="wholesale_shop">Wholesale Shop</option>
-                                <option value="distributor">Distributor</option>
-                                <option value="market_owner">Market Owner (Sell Products)</option>
+                                {regType === 'merchant' ? (
+                                    <>
+                                        <option value="retail">Retail Shop</option>
+                                        <option value="wholesale">Wholesale Shop</option>
+                                        <option value="distributor">Distributor</option>
+                                    </>
+                                ) : (
+                                    <>
+                                        <option value="market_owner">Market Owner</option>
+                                        <option value="low_level_trader">Low Level Trader</option>
+                                        <option value="bulk_trader">Bulk Trader</option>
+                                    </>
+                                )}
                             </select>
                         </div>
                         <div className="form-group">
@@ -97,12 +132,12 @@ export default function RegisterWholesale() {
                     </div>
 
                     <button type="submit" className="btn btn-accent btn-lg btn-full auth-submit" disabled={loading} id="wholesale-register-submit">
-                        {loading ? 'Creating account…' : 'Create Merchant Account 🏪'}
+                        {loading ? 'Creating account…' : `Create ${regType === 'merchant' ? 'Merchant' : 'Trader'} Account 🏪`}
                     </button>
                 </form>
 
                 <p style={{ textAlign: 'center', fontSize: '0.8rem', color: 'var(--clr-text-faint)', marginTop: 'var(--space-3)' }}>
-                    Already have a merchant account? <Link to="/auth/login" className="auth-link">Sign In</Link>
+                    Already have a business account? <Link to="/auth/login" className="auth-link">Sign In</Link>
                 </p>
             </div>
         </div>

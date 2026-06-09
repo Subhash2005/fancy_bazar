@@ -1,5 +1,6 @@
 const Order = require('../models/Order')
 const Product = require('../models/Product')
+const mongoose = require('mongoose')
 
 const COMMISSION_PCT = 0.08
 const GST_PCT = 0.18
@@ -22,28 +23,65 @@ function getEffectivePrice(variant, qty, buyerType) {
 exports.createOrder = async (req, res) => {
     try {
         console.log('--- RECV PAYLOAD:', JSON.stringify(req.body));
-        const { items, shippingAddress, payment, donation = { enabled: false, amount: 0 } } = req.body
+        const { items, deliveryAddress, payment, donation = { enabled: false, amount: 0 } } = req.body
 
         // Validate items and calculate prices server-side
         let subtotal = 0
         const processedItems = []
 
         for (const item of items) {
-            const product = await Product.findById(item.product)
-            if (!product) return res.status(404).json({ success: false, message: `Product ${item.product} not found` })
+            if (!mongoose.Types.ObjectId.isValid(item.product)) {
+                return res.status(400).json({ success: false, message: `Invalid product ID format for item: ${item.product}` })
+            }
+            
+            let product, variant, unitPrice;
+            
+            if (item.isVendorProduct) {
+                const Shop = require('../models/Shop');
+                const shop = await Shop.findById(item.shopId);
+                if (!shop) return res.status(404).json({ success: false, message: `Shop ${item.shopId} not found` });
+                
+                product = shop.products.id(item.product);
+                if (!product) return res.status(404).json({ success: false, message: `Vendor Product ${item.product} not found` });
+                
+                variant = { sku: `VP-${product._id}`, stock: product.quantity, retailPrice: product.price };
+                unitPrice = product.price;
+            } else {
+                product = await Product.findById(item.product)
+                if (!product) return res.status(404).json({ success: false, message: `Product ${item.product} not found` })
 
-            const variant = product.variants.find(v => v.sku === item.variant)
-            if (!variant) return res.status(404).json({ success: false, message: `Variant ${item.variant} not found` })
+                variant = product.variants.find(v => v.sku === item.variant)
+                if (!variant) return res.status(404).json({ success: false, message: `Variant ${item.variant} not found` })
+                unitPrice = getEffectivePrice(variant, item.qty, item.buyerType)
+            }
+
             if (variant.stock < item.qty) return res.status(400).json({ success: false, message: `Insufficient stock for ${product.name}` })
 
-            const unitPrice = getEffectivePrice(variant, item.qty, item.buyerType)
+            // Enforce merchant minimum quantity
+            if (req.user.role === 'merchant' && item.qty < 5) {
+                return res.status(400).json({ success: false, message: `Merchant accounts must buy a minimum of 5 quantities for each item (${product.name})` })
+            }
+
             subtotal += unitPrice * item.qty
 
             // Deduct stock
-            variant.stock -= item.qty
-            await product.save()
+            if (item.isVendorProduct) {
+                const Shop = require('../models/Shop');
+                await Shop.updateOne({ 'products._id': product._id }, { $inc: { 'products.$.quantity': -item.qty } });
+            } else {
+                variant.stock -= item.qty
+                await product.save()
+            }
 
-            processedItems.push({ product: product._id, variant: variant.sku, qty: item.qty, unitPrice, buyerType: item.buyerType || 'retail' })
+            processedItems.push({ 
+                product: product._id, 
+                isVendorProduct: item.isVendorProduct,
+                shopId: item.shopId,
+                variant: item.isVendorProduct ? variant.sku : variant.sku, 
+                qty: item.qty, 
+                unitPrice, 
+                buyerType: item.buyerType || 'retail' 
+            })
         }
 
         const commission = subtotal * COMMISSION_PCT
@@ -59,7 +97,7 @@ exports.createOrder = async (req, res) => {
             user: req.user._id,
             buyerType,
             items: processedItems,
-            deliveryAddress: shippingAddress, // Map incoming shippingAddress to deliveryAddress
+            deliveryAddress: deliveryAddress,
             pricing: { subtotal, commission, deliveryCharge, gst, donation: donationAmt, total },
             payment: { method: payment.method, status: payment.method === 'cod' ? 'pending' : 'pending' },
         })
@@ -84,6 +122,21 @@ exports.getMyOrders = async (req, res) => {
             .skip((Number(page) - 1) * Number(limit))
             .limit(Number(limit))
             .populate('items.product', 'name images')
+            .lean()
+            
+        const Shop = require('../models/Shop');
+        for (const order of orders) {
+            for (const item of order.items) {
+                if (item.isVendorProduct) {
+                    const shop = await Shop.findById(item.shopId);
+                    const vp = shop ? shop.products.id(item.product) : null;
+                    if (vp) {
+                        item.product = { _id: vp._id, name: vp.name, images: [{url: vp.imageUrl}] };
+                    }
+                }
+            }
+        }
+        
         const total = await Order.countDocuments(filter)
         res.json({ success: true, orders, total })
     } catch (err) {
@@ -94,8 +147,20 @@ exports.getMyOrders = async (req, res) => {
 // GET /api/v1/orders/:id
 exports.getOrder = async (req, res) => {
     try {
-        const order = await Order.findOne({ _id: req.params.id, user: req.user._id }).populate('items.product')
+        const order = await Order.findOne({ _id: req.params.id, user: req.user._id }).populate('items.product').lean()
         if (!order) return res.status(404).json({ success: false, message: 'Order not found' })
+        
+        const Shop = require('../models/Shop');
+        for (const item of order.items) {
+            if (item.isVendorProduct) {
+                const shop = await Shop.findById(item.shopId);
+                const vp = shop ? shop.products.id(item.product) : null;
+                if (vp) {
+                    item.product = { _id: vp._id, name: vp.name, images: [{url: vp.imageUrl}] };
+                }
+            }
+        }
+        
         res.json({ success: true, order })
     } catch (err) {
         res.status(500).json({ success: false, message: err.message })
@@ -113,10 +178,18 @@ exports.cancelOrder = async (req, res) => {
 
         // Restore stock
         for (const item of order.items) {
-            await Product.findOneAndUpdate(
-                { _id: item.product, 'variants.sku': item.variant },
-                { $inc: { 'variants.$.stock': item.qty } }
-            )
+            if (item.isVendorProduct) {
+                const Shop = require('../models/Shop');
+                await Shop.updateOne(
+                    { 'products._id': item.product },
+                    { $inc: { 'products.$.quantity': item.qty } }
+                );
+            } else {
+                await Product.findOneAndUpdate(
+                    { _id: item.product, 'variants.sku': item.variant },
+                    { $inc: { 'variants.$.stock': item.qty } }
+                )
+            }
         }
 
         order.status = 'cancelled'

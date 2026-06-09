@@ -11,6 +11,10 @@
     padding: var(--space-12) 0;
 }
 
+.footer__top--trader {
+    grid-template-columns: 1.5fr 1.5fr 1.5fr;
+}
+
 @media (max-width: 1024px) {
     .footer__top {
         grid-template-columns: 1fr 1fr 1fr;
@@ -18,6 +22,10 @@
 
     .footer__brand {
         grid-column: 1 / -1;
+    }
+
+    .footer__top--trader {
+        grid-template-columns: 1fr 1fr;
     }
 }
 
@@ -30,6 +38,10 @@
 
     .footer__brand {
         grid-column: 1 / -1;
+    }
+
+    .footer__top--trader {
+        grid-template-columns: 1fr;
     }
 }
 

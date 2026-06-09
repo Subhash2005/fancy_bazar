@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { FiCamera, FiBox, FiMapPin, FiSave, FiPlus, FiImage, FiSettings, FiType, FiZap } from 'react-icons/fi';
+import { FiCamera, FiBox, FiMapPin, FiSave, FiPlus, FiImage, FiSettings, FiType, FiZap, FiTrendingUp, FiShoppingBag } from 'react-icons/fi';
 import { useSelector } from 'react-redux';
 import api from '../../services/api';
 
@@ -79,6 +79,41 @@ export default function VendorDashboard() {
     const [mode, setMode] = useState(null);
     const [processing, setProcessing] = useState(false);
     const [newProduct, setNewProduct] = useState({ name: '', price: '', quantity: '', imageUrl: '', category: '' });
+
+    // Market view state
+    const [marketShops, setMarketShops] = useState([]);
+    const [loadingMarket, setLoadingMarket] = useState(false);
+
+    // Orders state
+    const [shopOrders, setShopOrders] = useState([]);
+    const [loadingOrders, setLoadingOrders] = useState(false);
+
+    // Load orders when tab is selected
+    useEffect(() => {
+        if (activeTab === 'orders') {
+            setLoadingOrders(true);
+            api.get('/shops/my/orders')
+                .then(res => setShopOrders(res.data.orders || []))
+                .catch(err => toast.error('Failed to load orders'))
+                .finally(() => setLoadingOrders(false));
+        }
+    }, [activeTab]);
+
+    // Load market shops when tab is selected
+    useEffect(() => {
+        if (activeTab === 'market') {
+            setLoadingMarket(true);
+            api.get('/shops')
+                .then(res => {
+                    if (res.data.shops) {
+                        // Exclude current user's shop
+                        setMarketShops(res.data.shops.filter(s => s._id !== shopId));
+                    }
+                })
+                .catch(err => toast.error('Failed to load market data'))
+                .finally(() => setLoadingMarket(false));
+        }
+    }, [activeTab, shopId]);
 
     // Load vendor's shop on mount
     useEffect(() => {
@@ -207,13 +242,18 @@ export default function VendorDashboard() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
                 <div style={{ width: 48, height: 48, background: 'var(--clr-accent)', color: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>🏪</div>
                 <div>
-                    <h1 style={{ margin: 0 }}>Merchant Dashboard</h1>
+                    <h1 style={{ margin: 0 }}>Trader Dashboard</h1>
                     <p style={{ margin: 0, color: 'var(--clr-text-muted)' }}>Welcome, {user?.name || 'Market Owner'}</p>
                 </div>
             </div>
 
             <div style={{ display: 'flex', gap: '20px', marginBottom: '32px', borderBottom: '1px solid var(--clr-border)' }}>
-                {[['shop_profile', <FiSettings />, 'Shop Details'], ['products', <FiBox />, 'Manage Products']].map(([tab, icon, label]) => (
+                {[
+                    ['shop_profile', <FiSettings />, 'Shop Details'], 
+                    ['products', <FiBox />, 'Manage Products'],
+                    ['orders', <FiShoppingBag />, 'Orders'],
+                    ['market', <FiTrendingUp />, 'Market View']
+                ].map(([tab, icon, label]) => (
                     <button key={tab} onClick={() => setActiveTab(tab)} style={{ background: 'none', border: 'none', padding: '12px 20px', borderBottom: activeTab === tab ? '2px solid var(--clr-primary)' : '2px solid transparent', color: activeTab === tab ? 'var(--clr-primary)' : 'inherit', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
                         {icon} {label}
                     </button>
@@ -284,6 +324,130 @@ export default function VendorDashboard() {
                 </div>
             )}
 
+            {/* ── ORDERS VIEW ── */}
+            {activeTab === 'orders' && (
+                <div>
+                    <div style={{ marginBottom: 24 }}>
+                        <h2>Shop Orders</h2>
+                        <p style={{ color: 'var(--clr-text-muted)', margin: 0 }}>Manage the orders placed by customers for your shop items.</p>
+                    </div>
+
+                    {loadingOrders ? (
+                        <div style={{ textAlign: 'center', padding: '60px' }}>
+                            <div className="spinner" style={{ margin: '0 auto 16px' }}></div>
+                            <p>Loading orders...</p>
+                        </div>
+                    ) : shopOrders.length === 0 ? (
+                        <div className="card" style={{ padding: '60px', textAlign: 'center' }}>
+                            <FiShoppingBag size={48} color="var(--clr-text-faint)" />
+                            <h3 style={{ marginTop: 16 }}>No Orders Yet</h3>
+                            <p style={{ color: 'var(--clr-text-muted)' }}>Orders for your items will appear here once customers purchase them.</p>
+                        </div>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                            {shopOrders.map(order => (
+                                <div key={order._id} className="card" style={{ padding: 20 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, borderBottom: '1px solid var(--clr-border)', paddingBottom: 12 }}>
+                                        <div>
+                                            <strong style={{ fontSize: '1.1rem' }}>Order #{order.orderNumber}</strong>
+                                            <span style={{ marginLeft: 12, fontSize: '0.85rem', color: 'var(--clr-text-muted)' }}>{new Date(order.createdAt).toLocaleDateString()}</span>
+                                        </div>
+                                        <span className={`badge ${order.status === 'pending' ? 'badge-warning' : 'badge-success'}`}>{order.status.toUpperCase()}</span>
+                                    </div>
+                                    <div style={{ marginBottom: 16 }}>
+                                        <p style={{ margin: '0 0 4px 0' }}><strong>Customer:</strong> {order.user?.name} ({order.user?.phone || 'No phone'})</p>
+                                        <p style={{ margin: '0 0 4px 0' }}><strong>Delivery:</strong> {order.deliveryAddress?.city}, {order.deliveryAddress?.state}</p>
+                                    </div>
+                                    <div>
+                                        <h4 style={{ fontSize: '0.95rem', marginBottom: 8 }}>Items Purchased:</h4>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                            {order.items.map((item, idx) => (
+                                                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--clr-bg-alt)', padding: 12, borderRadius: 6 }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                                        <img src={item.product?.images?.[0]?.url || `https://picsum.photos/seed/${item.product?._id}/40/40`} alt="item" style={{ width: 40, height: 40, borderRadius: 4, objectFit: 'cover' }} />
+                                                        <div>
+                                                            <div style={{ fontWeight: '500' }}>{item.product?.name || 'Unknown Item'}</div>
+                                                            <div style={{ fontSize: '0.85rem', color: 'var(--clr-text-muted)' }}>Qty: {item.qty}</div>
+                                                        </div>
+                                                    </div>
+                                                    <strong style={{ color: 'var(--clr-primary)' }}>₹{item.unitPrice * item.qty}</strong>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* ── MARKET VIEW ── */}
+            {activeTab === 'market' && (
+                <div>
+                    <div style={{ marginBottom: 24 }}>
+                        <h2>Market Overview</h2>
+                        <p style={{ color: 'var(--clr-text-muted)', margin: 0 }}>See what other shop owners are selling and compare prices.</p>
+                    </div>
+
+                    {loadingMarket ? (
+                        <div style={{ textAlign: 'center', padding: '60px' }}>
+                            <div className="spinner" style={{ margin: '0 auto 16px' }}></div>
+                            <p>Loading competitor shops...</p>
+                        </div>
+                    ) : marketShops.length === 0 ? (
+                        <div className="card" style={{ padding: '60px', textAlign: 'center' }}>
+                            <FiTrendingUp size={48} color="var(--clr-text-faint)" />
+                            <h3 style={{ marginTop: 16 }}>No other shops found</h3>
+                            <p style={{ color: 'var(--clr-text-muted)' }}>You are the only trader on the platform right now!</p>
+                        </div>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+                            {marketShops.map(shop => (
+                                <div key={shop._id} className="card" style={{ padding: 24 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20, borderBottom: '1px solid var(--clr-border)', paddingBottom: 16 }}>
+                                        <div style={{ width: 64, height: 64, borderRadius: 8, background: 'var(--clr-bg-alt)', overflow: 'hidden' }}>
+                                            <img src={shop.image || `https://picsum.photos/seed/${shop._id}/64/64`} alt={shop.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        </div>
+                                        <div>
+                                            <h3 style={{ margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                {shop.name}
+                                                <span className="badge badge-accent" style={{ fontSize: '0.7rem' }}>{shop.category || 'General'}</span>
+                                            </h3>
+                                            <p style={{ margin: 0, color: 'var(--clr-text-muted)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                <FiMapPin size={14} /> {shop.location || 'Unknown Location'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    {!shop.products || shop.products.length === 0 ? (
+                                        <p style={{ color: 'var(--clr-text-faint)', fontStyle: 'italic', margin: 0 }}>This shop hasn't listed any items yet.</p>
+                                    ) : (
+                                        <div>
+                                            <h4 style={{ margin: '0 0 16px 0', fontSize: '0.95rem' }}>Listed Items ({shop.products.length})</h4>
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
+                                                {shop.products.map(p => (
+                                                    <div key={p._id} style={{ border: '1px solid var(--clr-border)', borderRadius: 8, overflow: 'hidden' }}>
+                                                        <img src={p.imageUrl || `https://picsum.photos/seed/${p._id}/200/200`} alt={p.name} style={{ width: '100%', height: 140, objectFit: 'cover' }} />
+                                                        <div style={{ padding: 12 }}>
+                                                            <div style={{ fontWeight: '500', fontSize: '0.9rem', marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={p.name}>{p.name}</div>
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                <span style={{ color: 'var(--clr-primary)', fontWeight: 'bold' }}>₹{p.price}</span>
+                                                                <span style={{ fontSize: '0.8rem', color: 'var(--clr-text-muted)' }}>Qty: {p.quantity}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
             {/* ── ADD PRODUCT MODAL ── */}
             {showModal && (
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16, overflowY: 'auto' }}>
@@ -291,14 +455,25 @@ export default function VendorDashboard() {
                         <button onClick={resetModal} style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', lineHeight: 1 }}>✕</button>
 
                         <h2 style={{ margin: '0 0 6px 0' }}>Add New Item</h2>
-                        <p style={{ margin: '0 0 24px 0', color: 'var(--clr-text-muted)', fontSize: '0.9rem' }}>Choose how you want to list your product:</p>
-
-                        {/* ── Mode selector ── */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 28 }}>
-                            <ModeCard icon="✍️" title="Name Only" desc="Type name, AI generates image" value="name_to_image" />
-                            <ModeCard icon="📷" title="Photo Only" desc="Upload pic, AI names it" value="image_to_name" />
-                            <ModeCard icon="✅" title="Both" desc="Enter name + upload photo" value="manual" />
-                        </div>
+                        
+                        {!mode ? (
+                            <>
+                                <p style={{ margin: '0 0 24px 0', color: 'var(--clr-text-muted)', fontSize: '0.9rem' }}>Choose how you want to list your product:</p>
+                                {/* ── Mode selector ── */}
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 28 }}>
+                                    <ModeCard icon="✍️" title="Name Only" desc="Type name, AI generates image" value="name_to_image" />
+                                    <ModeCard icon="📷" title="Photo Only" desc="Upload pic, AI names it" value="image_to_name" />
+                                    <ModeCard icon="✅" title="Both" desc="Enter name + upload photo" value="manual" />
+                                </div>
+                                <div style={{ textAlign: 'center' }}>
+                                    <button className="btn btn-ghost" onClick={resetModal}>Cancel</button>
+                                </div>
+                            </>
+                        ) : (
+                            <button className="btn btn-ghost btn-sm" onClick={() => setMode(null)} style={{ marginBottom: '24px', padding: 0, height: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                ← Back to options
+                            </button>
+                        )}
 
                         {mode && (
                             <form onSubmit={handleSaveProduct}>

@@ -58,12 +58,16 @@
     overflow: hidden;
     background: var(--clr-surface-3);
     aspect-ratio: 1 / 1;
+    max-height: 500px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .product-gallery__img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain; /* Prevents large images from being cropped */
     transition: transform var(--transition-slow);
 }
 

@@ -55,6 +55,8 @@ export default function Checkout() {
             const orderPayload = {
                 items: items.map(i => ({
                     product: i.product._id,
+                    isVendorProduct: i.product.type === 'vendor',
+                    shopId: i.product._vendorShopId || null,
                     variant: i.variant.sku,
                     qty: i.qty,
                     unitPrice: i.variant.retailPrice,

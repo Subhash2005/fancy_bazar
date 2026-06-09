@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { FiHeart, FiShoppingCart, FiTruck, FiShield, FiStar, FiMinus, FiPlus, FiShare2, FiChevronLeft, FiChevronRight, FiArrowLeft, FiRefreshCw } from 'react-icons/fi'
 import SEO from '../components/layout/SEO'
@@ -60,6 +60,12 @@ export default function ProductDetail() {
     const [activeTab, setActiveTab] = useState('description')
 
     useEffect(() => {
+        if (user?.role === 'merchant' && qty < 5) {
+            setQty(5)
+        }
+    }, [user, qty])
+
+    useEffect(() => {
         setLoading(true)
         api.get(`/products/${id}`)
             .then(res => { setProduct(res.data.product); setSelectedVariant(res.data.product.variants?.[0]) })
@@ -116,7 +122,13 @@ export default function ProductDetail() {
         </div>
     )
 
-    if (!product) return null
+    if (!product) return (
+        <div className="pd-error">
+            <SEO title="Product Not Found" />
+            <h2>Product not found</h2>
+            <button onClick={() => navigate('/')} className="btn btn-primary">Go Home</button>
+        </div>
+    )
 
     const price = selectedVariant ? getEffectivePrice(selectedVariant, qty, buyerType) : 0
     const tier = buyerType === 'wholesale' ? getWholesaleTier(qty) : null
@@ -149,31 +161,6 @@ export default function ProductDetail() {
         const v = product.variants.find(v => v.size === size && (selectedVariant?.color ? v.color === selectedVariant.color : true))
         if (v) setSelectedVariant(v)
     }
-    if (loading) return (
-        <div className="pd-loading">
-            <SEO title="Loading Product..." />
-            <div className="skeleton pd-skeleton-hero" />
-        </div>
-    )
-
-    if (!product) return (
-        <div className="pd-error">
-            <SEO title="Product Not Found" />
-            <h2>Product not found</h2>
-            <button onClick={() => navigate('/')} className="btn btn-primary">Go Home</button>
-        </div>
-    )
-
-    const price = selectedVariant ? getEffectivePrice(selectedVariant, qty, buyerType) : 0
-    const tier = buyerType === 'wholesale' ? getWholesaleTier(qty) : null
-    const discountPct = selectedVariant?.originalPrice
-        ? Math.round((1 - price / selectedVariant.originalPrice) * 100)
-        : null
-    const deliveryDate = new Date(Date.now() + (product.deliveryDays || 3) * 86400000).toLocaleDateString('en-IN', { day: 'numeric', month: 'long' })
-
-    // Unique colours available
-    const uniqueColors = [...new Map(product.variants.map(v => [v.color, v])).values()]
-    const uniqueSizes = [...new Set(product.variants.map(v => v.size).filter(Boolean))]
 
     return (
         <div className="product-detail-page">
@@ -369,8 +356,8 @@ export default function ProductDetail() {
                             <div className="qty-selector__controls">
                                 <button
                                     className="qty-btn"
-                                    onClick={() => setQty(q => Math.max(buyerType === 'wholesale' ? 10 : 1, q - 1))}
-                                    disabled={qty <= (buyerType === 'wholesale' ? 10 : 1)}
+                                    onClick={() => setQty(q => Math.max(buyerType === 'wholesale' ? 10 : (user?.role === 'merchant' ? 5 : 1), q - 1))}
+                                    disabled={qty <= (buyerType === 'wholesale' ? 10 : (user?.role === 'merchant' ? 5 : 1))}
                                     aria-label="Decrease quantity"
                                 ><FiMinus size={14} /></button>
                                 <span className="qty-value" aria-live="polite" aria-label={`Quantity: ${qty}`}>{qty}</span>

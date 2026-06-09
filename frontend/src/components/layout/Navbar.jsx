@@ -12,14 +12,11 @@ import api from '../../services/api'
 import './Navbar.css'
 
 const CATEGORIES = [
-    { label: 'Hair Accessories', slug: 'hair-accessories', icon: '💇' },
-    { label: 'Jewellery', slug: 'jewellery', icon: '💍' },
-    { label: 'Bags & Purses', slug: 'bags-purses', icon: '👜' },
-    { label: 'Watches', slug: 'watches', icon: '⌚' },
-    { label: 'Scarves & Stoles', slug: 'scarves-stoles', icon: '🧣' },
-    { label: 'Sunglasses', slug: 'sunglasses', icon: '🕶️' },
-    { label: 'Keychains', slug: 'keychains', icon: '🔑' },
-    { label: 'Gift Sets', slug: 'gift-sets', icon: '🎁' },
+    { label: 'Writing Instruments', slug: 'writing-instruments', icon: '🖊️' },
+    { label: 'Paper Products', slug: 'paper-products', icon: '📄' },
+    { label: 'Office Supplies', slug: 'office-supplies', icon: '📎' },
+    { label: 'Art & Craft', slug: 'art-craft', icon: '🎨' },
+    { label: 'Filing & Storage', slug: 'filing-storage', icon: '📁' },
 ]
 
 export default function Navbar() {
@@ -29,6 +26,8 @@ export default function Navbar() {
     const { user } = useSelector(state => state.auth)
     const cartCount = useSelector(selectCartCount)
     const wishlistCount = useSelector(state => state.wishlist.items.length)
+    
+    const isTrader = user && ['vendor', 'trader_low', 'trader_bulk'].includes(user.role)
 
     const [mobileOpen, setMobileOpen] = useState(false)
     const [searchOpen, setSearchOpen] = useState(false)
@@ -135,7 +134,8 @@ export default function Navbar() {
                 </Link>
 
                 {/* Categories dropdown — desktop */}
-                <nav className="navbar__nav hidden-mobile" aria-label="Main navigation">
+                {!isTrader && (
+                    <nav className="navbar__nav hidden-mobile" aria-label="Main navigation">
                     <div className="navbar__cat-toggle" onMouseEnter={() => setCatMenuOpen(true)} onMouseLeave={() => setCatMenuOpen(false)}>
                         <button className="navbar__nav-btn" aria-expanded={catMenuOpen} aria-haspopup="true">
                             <FiGrid size={16} /> Categories <FiChevronDown size={14} />
@@ -152,10 +152,12 @@ export default function Navbar() {
                             </div>
                         )}
                     </div>
-                </nav>
+                    </nav>
+                )}
 
                 {/* Search bar — desktop */}
-                <form className="navbar__search hidden-mobile" onSubmit={handleSearch} role="search">
+                {!isTrader && (
+                    <form className="navbar__search hidden-mobile" onSubmit={handleSearch} role="search">
                     <FiSearch className="navbar__search-icon" aria-hidden="true" />
                     <input
                         ref={searchRef}
@@ -201,29 +203,36 @@ export default function Navbar() {
                         </div>
                     )}
                 </form>
+                )}
 
                 {/* Right icons */}
                 <div className="navbar__actions">
                     {/* Mobile search toggle */}
-                    <button
-                        className="navbar__icon-btn show-mobile"
-                        onClick={() => setSearchOpen(!searchOpen)}
-                        aria-label="Toggle search"
-                    >
-                        {searchOpen ? <FiX size={20} /> : <FiSearch size={20} />}
-                    </button>
+                    {!isTrader && (
+                        <button
+                            className="navbar__icon-btn show-mobile"
+                            onClick={() => setSearchOpen(!searchOpen)}
+                            aria-label="Toggle search"
+                        >
+                            {searchOpen ? <FiX size={20} /> : <FiSearch size={20} />}
+                        </button>
+                    )}
 
                     {/* Wishlist */}
-                    <Link to="/wishlist" className="navbar__icon-btn" aria-label={`Wishlist (${wishlistCount} items)`}>
-                        <FiHeart size={20} />
-                        {wishlistCount > 0 && <span className="navbar__badge" aria-hidden="true">{wishlistCount}</span>}
-                    </Link>
+                    {!isTrader && (
+                        <Link to="/wishlist" className="navbar__icon-btn" aria-label={`Wishlist (${wishlistCount} items)`}>
+                            <FiHeart size={20} />
+                            {wishlistCount > 0 && <span className="navbar__badge" aria-hidden="true">{wishlistCount}</span>}
+                        </Link>
+                    )}
 
                     {/* Cart */}
-                    <Link to="/cart" className="navbar__icon-btn" aria-label={`Shopping cart (${cartCount} items)`}>
-                        <FiShoppingCart size={20} />
-                        {cartCount > 0 && <span className="navbar__badge navbar__badge--accent" aria-hidden="true">{cartCount}</span>}
-                    </Link>
+                    {!isTrader && (
+                        <Link to="/cart" className="navbar__icon-btn" aria-label={`Shopping cart (${cartCount} items)`}>
+                            <FiShoppingCart size={20} />
+                            {cartCount > 0 && <span className="navbar__badge navbar__badge--accent" aria-hidden="true">{cartCount}</span>}
+                        </Link>
+                    )}
 
                     {/* User menu */}
                     {user ? (
@@ -245,16 +254,15 @@ export default function Navbar() {
                                 <div className="navbar__user-dropdown" role="menu">
                                     <div className="navbar__user-info">
                                         <strong>{user.name}</strong>
-                                        <span>{user.role === 'wholesale' ? '🏭 Wholesale' : user.role === 'vendor' ? '🏪 Merchant' : '🛍️ Retail'}</span>
+                                        <span>{user.role === 'wholesale' ? '🏭 Wholesale' : user.role === 'merchant' ? '🛍️ Merchant' : ['vendor', 'trader_low', 'trader_bulk'].includes(user.role) ? '🏪 Trader' : '🛍️ Retail'}</span>
                                     </div>
                                     <div className="navbar__divider" />
                                     <Link to="/profile" className="navbar__user-item" role="menuitem"><FiUser size={14} /> My Profile</Link>
-                                    <Link to="/orders" className="navbar__user-item" role="menuitem"><FiPackage size={14} /> My Orders</Link>
+                                    {!['vendor', 'trader_low', 'trader_bulk'].includes(user.role) && (
+                                        <Link to="/orders" className="navbar__user-item" role="menuitem"><FiPackage size={14} /> My Orders</Link>
+                                    )}
                                     {user.role === 'admin' && (
                                         <Link to="/admin" className="navbar__user-item" role="menuitem"><FiSettings size={14} /> Admin Panel</Link>
-                                    )}
-                                    {user.role === 'vendor' && (
-                                        <Link to="/vendor" className="navbar__user-item" role="menuitem"><FiSettings size={14} /> Vendor Dashboard</Link>
                                     )}
                                     <div className="navbar__divider" />
                                     <button className="navbar__user-item navbar__user-logout" onClick={handleLogout} role="menuitem">
@@ -282,7 +290,8 @@ export default function Navbar() {
             </div>
 
             {/* Secondary strip — Trending | New Arrivals | Wholesale */}
-            <div className="navbar__secondary hidden-mobile" aria-label="Quick links">
+            {!isTrader && (
+                <div className="navbar__secondary hidden-mobile" aria-label="Quick links">
                 <Link to="/categories/trending" className="navbar__sec-link navbar__sec-link--hot" id="nav-trending-link">
                     🔥 Trending
                 </Link>
@@ -298,10 +307,11 @@ export default function Navbar() {
                 <Link to="/shops" className="navbar__sec-link" id="nav-shops-link" style={{ color: '#10B981' }}>
                     🏪 Shops
                 </Link>
-            </div>
+                </div>
+            )}
 
             {/* Mobile search bar */}
-            {searchOpen && (
+            {!isTrader && searchOpen && (
                 <div className="navbar__mobile-search show-mobile animate-fade-in">
                     <form onSubmit={handleSearch} role="search" className="navbar__mobile-search-form">
                         <input
@@ -332,19 +342,23 @@ export default function Navbar() {
             {/* Mobile menu */}
             {mobileOpen && (
                 <nav className="navbar__mobile-menu show-mobile animate-fade-in" aria-label="Mobile navigation">
-                    <div className="navbar__mobile-cats">
-                        <p className="navbar__mobile-section-label">Categories</p>
-                        {CATEGORIES.map(cat => (
-                            <Link key={cat.slug} to={`/categories/${cat.slug}`} className="navbar__mobile-cat-item">
-                                {cat.icon} {cat.label}
-                            </Link>
-                        ))}
-                    </div>
-                    <div className="navbar__divider" />
-                    <Link to="/categories/trending" className="navbar__mobile-cat-item">🔥 Trending</Link>
-                    <Link to="/categories/new-arrivals" className="navbar__mobile-cat-item">✨ New Arrivals</Link>
-                    <Link to="/categories/wholesale" className="navbar__mobile-cat-item">🏭 Wholesale</Link>
-                    <Link to="/shops" className="navbar__mobile-cat-item" style={{ color: '#10B981', fontWeight: 600 }}>🏪 Shops</Link>
+                    {!isTrader && (
+                        <>
+                            <div className="navbar__mobile-cats">
+                                <p className="navbar__mobile-section-label">Categories</p>
+                                {CATEGORIES.map(cat => (
+                                    <Link key={cat.slug} to={`/categories/${cat.slug}`} className="navbar__mobile-cat-item">
+                                        {cat.icon} {cat.label}
+                                    </Link>
+                                ))}
+                            </div>
+                            <div className="navbar__divider" />
+                            <Link to="/categories/trending" className="navbar__mobile-cat-item">🔥 Trending</Link>
+                            <Link to="/categories/new-arrivals" className="navbar__mobile-cat-item">✨ New Arrivals</Link>
+                            <Link to="/categories/wholesale" className="navbar__mobile-cat-item">🏭 Wholesale</Link>
+                            <Link to="/shops" className="navbar__mobile-cat-item" style={{ color: '#10B981', fontWeight: 600 }}>🏪 Shops</Link>
+                        </>
+                    )}
                 </nav>
             )}
         </header>

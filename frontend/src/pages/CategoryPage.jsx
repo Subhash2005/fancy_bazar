@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useParams, useSearchParams, Link } from 'react-router-dom'
+import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { FiFilter, FiX, FiChevronDown, FiGrid, FiList, FiStar } from 'react-icons/fi'
 import ProductCard from '../components/products/ProductCard'
 import api from '../services/api'
@@ -31,6 +31,7 @@ export default function CategoryPage() {
     const { slug } = useParams()
     const [searchParams, setSearchParams] = useSearchParams()
     const q = searchParams.get('q') || ''
+    const navigate = useNavigate()
 
     const [products, setProducts] = useState([])
     const [loading, setLoading] = useState(true)
@@ -96,7 +97,9 @@ export default function CategoryPage() {
             {/* Breadcrumb */}
             <div className="category-breadcrumb">
                 <div className="container">
-                    <nav aria-label="Breadcrumb">
+                    <nav aria-label="Breadcrumb" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <button onClick={() => navigate(-1)} className="btn btn-ghost btn-sm" style={{ padding: '0 8px', height: '24px', minHeight: 'auto', display: 'flex', alignItems: 'center' }}>← Back</button>
+                        <span style={{ color: 'var(--clr-border)', margin: '0 4px' }}>|</span>
                         <Link to="/">Home</Link>
                         <span aria-hidden="true"> / </span>
                         <span aria-current="page">{q ? `Search: "${q}"` : categoryName}</span>
@@ -112,11 +115,10 @@ export default function CategoryPage() {
                     </div>
                     <div className="wholesale-categories-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
                         {[
-                            { slug: 'a4', name: 'A4 Paper', icon: '📄', desc: 'Premium copier & printer papers', img: 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=400&q=80' },
-                            { slug: 'hairclips', name: 'Hairclips', icon: '🎀', desc: 'Fancy clips & accessories', img: 'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?w=400&q=80' },
-                            { slug: 'chart', name: 'Chart Paper', icon: '🖼️', desc: 'Large colored chart papers', img: 'https://images.unsplash.com/photo-1510127034890-ba27508e9f1c?w=400&q=80' },
-                            { slug: 'writing-instruments', name: 'Pens & Markers', icon: '🖊️', desc: 'Bulk writing instruments', img: 'https://images.unsplash.com/photo-1585336261022-680e295ce3fe?w=400&q=80' },
+                            { slug: 'paper-products', name: 'Paper Products', icon: '📄', desc: 'Premium copier & printer papers', img: 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=400&q=80' },
+                            { slug: 'filing-storage', name: 'Filing & Storage', icon: '📁', desc: 'Organize your documents', img: 'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?w=400&q=80' },
                             { slug: 'office-supplies', name: 'Office Supplies', icon: '📎', desc: 'Staplers, pins, files, etc.', img: 'https://images.unsplash.com/photo-1497911270199-1c552a70cb60?w=400&q=80' },
+                            { slug: 'writing-instruments', name: 'Pens & Markers', icon: '🖊️', desc: 'Bulk writing instruments', img: 'https://images.unsplash.com/photo-1585336261022-680e295ce3fe?w=400&q=80' },
                             { slug: 'art-craft', name: 'Art & Craft', icon: '🎨', desc: 'Watercolors, pastels, brushes', img: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=400&q=80' },
                         ].map(cat => (
                             <Link key={cat.slug} to={`/categories/${cat.slug}`} className="card" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', overflow: 'hidden', transition: 'transform 0.2s', borderRadius: '12px' }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-4px)'} onMouseLeave={e => e.currentTarget.style.transform = 'none'}>

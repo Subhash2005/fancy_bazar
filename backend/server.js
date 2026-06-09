@@ -46,7 +46,7 @@ app.use(cors({
 
 // ——— Rate limiting ———
 const globalLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 200, standardHeaders: true, legacyHeaders: false })
-const authLimiter = rateLimit({ windowMs: 60 * 1000, max: 5, message: { success: false, message: 'Too many attempts. Try again in 1 minute.' } })
+const authLimiter = rateLimit({ windowMs: 60 * 1000, max: 50, message: { success: false, message: 'Too many attempts. Try again in 1 minute.' } })
 app.use(globalLimiter)
 
 // ——— Body parsing ———
@@ -57,9 +57,33 @@ app.use(express.urlencoded({ extended: true }))
 if (process.env.NODE_ENV !== 'production') app.use(morgan('dev'))
 
 // ——— Database ———
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/fancybazaar')
-    .then(() => console.log('✅ MongoDB connected'))
-    .catch(err => console.error('❌ MongoDB error:', err.message))
+async function connectDB() {
+    try {
+        let uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/fancybazaar';
+        if (process.env.USE_LOCAL_DB === 'true') {
+            console.log('⏳ Starting Local In-Memory Database (Bypassing ISP Block)...');
+            const { MongoMemoryServer } = require('mongodb-memory-server');
+            const mongoServer = await MongoMemoryServer.create();
+            uri = mongoServer.getUri();
+        }
+
+        await mongoose.connect(uri);
+        console.log('✅ MongoDB connected');
+
+        // Auto-seed local in-memory DB if empty
+        if (process.env.USE_LOCAL_DB === 'true') {
+            const Product = require('./models/Product');
+            if (await Product.countDocuments() === 0) {
+                console.log('🌱 Seeding local database...');
+                const { execSync } = require('child_process');
+                execSync('node seed.js', { stdio: 'inherit', env: { ...process.env, MONGODB_URI: uri } });
+            }
+        }
+    } catch (err) {
+        console.error('❌ MongoDB error:', err.message);
+    }
+}
+connectDB();
 
 // ——— Routes ———
 app.use('/api/v1/auth', authLimiter, authRoutes)

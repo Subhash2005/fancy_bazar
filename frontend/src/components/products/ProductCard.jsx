@@ -10,6 +10,7 @@ import './ProductCard.css'
 export default function ProductCard({ product }) {
     const dispatch = useDispatch()
     const isWishlisted = useSelector(selectIsWishlisted(product._id))
+    const { user } = useSelector(state => state.auth)
     const defaultVariant = product.variants?.[0] || {}
 
     const discountPct = defaultVariant.originalPrice
@@ -18,8 +19,10 @@ export default function ProductCard({ product }) {
 
     function handleAddToCart(e) {
         e.preventDefault()
-        dispatch(addToCart({ product, variant: defaultVariant, qty: 1, buyerType: 'retail' }))
-        toast.success(`${product.name} added to cart!`)
+        const qty = user?.role === 'wholesale' ? 10 : (user?.role === 'merchant' ? 5 : 1)
+        const buyerType = user?.role === 'wholesale' ? 'wholesale' : 'retail'
+        dispatch(addToCart({ product, variant: defaultVariant, qty, buyerType }))
+        toast.success(`${qty > 1 ? qty + 'x ' : ''}${product.name} added to cart!`)
     }
 
     function handleWishlist(e) {

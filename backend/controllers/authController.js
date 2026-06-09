@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken')
 const { validationResult } = require('express-validator')
 const User = require('../models/User')
 const crypto = require('crypto')
+const nodemailer = require('nodemailer')
 
 const generateTokens = (userId) => {
     const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '15m' })
@@ -16,7 +17,8 @@ exports.register = async (req, res) => {
 
     const { name, email, phone, password, role } = req.body
     try {
-        const existing = await User.findOne({ email })
+        const safeEmail = email ? email.toLowerCase().trim() : undefined;
+        const existing = await User.findOne({ email: safeEmail })
         if (existing) return res.status(409).json({ success: false, message: 'Email already registered' })
 
         const user = new User({ name, email, phone, passwordHash: password, role: role === 'wholesale' ? 'retail' : (role || 'retail') })
@@ -36,10 +38,15 @@ exports.registerWholesale = async (req, res) => {
         if (!gstNumber || !/^[A-Z0-9]{15}$/.test(gstNumber.toUpperCase())) {
             return res.status(422).json({ success: false, message: 'Invalid GST number (must be 15 alphanumeric chars)' })
         }
-        const existing = await User.findOne({ email })
+        const safeEmail = email ? email.toLowerCase().trim() : undefined;
+        const existing = await User.findOne({ email: safeEmail })
         if (existing) return res.status(409).json({ success: false, message: 'Email already registered' })
 
-        const userRole = role === 'vendor' ? 'vendor' : 'wholesale'
+        let userRole = 'wholesale';
+        if (role === 'vendor' || role === 'merchant' || role === 'trader_low' || role === 'trader_bulk') {
+            userRole = role;
+        }
+
         const user = new User({
             name, email, phone, passwordHash: password, role: userRole,
             gstNumber: gstNumber.toUpperCase(), businessName, businessType, businessAddress,
@@ -57,7 +64,9 @@ exports.registerWholesale = async (req, res) => {
 exports.login = async (req, res) => {
     const { email, phone, password, otp } = req.body
     try {
-        const query = email ? { email } : { phone }
+        const safeEmail = email ? email.toLowerCase().trim() : undefined;
+        const safePhone = phone ? phone.trim() : undefined;
+        const query = safeEmail ? { email: safeEmail } : { phone: safePhone }
         const user = await User.findOne(query)
         if (!user) return res.status(401).json({ success: false, message: 'Invalid credentials' })
 
@@ -117,8 +126,28 @@ exports.forgotPassword = async (req, res) => {
             user.resetPasswordToken = token
             user.resetPasswordExpiry = new Date(Date.now() + 60 * 60 * 1000) // 1 hour
             await user.save()
-            // TODO: send email
-            console.log(`[Reset] Token for ${email}: ${token}`)
+
+            const transporter = nodemailer.createTransport({
+                host: process.env.SMTP_HOST,
+                port: process.env.SMTP_PORT,
+                secure: process.env.SMTP_PORT === '465',
+                auth: {
+                    user: process.env.SMTP_USER,
+                    pass: process.env.SMTP_PASS,
+                },
+            });
+
+            const resetLink = `${process.env.CLIENT_URL}/auth/reset-password?token=${token}`;
+            
+            await transporter.sendMail({
+                from: `"FancyBazaar Support" <${process.env.MAIL_FROM}>`,
+                to: user.email,
+                subject: 'Password Reset - FancyBazaar',
+                text: `You requested a password reset. Click here: ${resetLink}`,
+                html: `<p>You requested a password reset. Click <a href="${resetLink}">here</a> to reset your password. The link is valid for 1 hour.</p>`,
+            });
+
+            console.log(`[Reset] Email sent to ${email} with token: ${token}`)
         }
         res.json({ success: true, message: 'If registered, a reset link will be emailed' })
     } catch (err) {

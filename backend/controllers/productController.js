@@ -17,8 +17,11 @@ exports.getProducts = async (req, res) => {
 
         // Category filter — support slug or id
         if (category && !['all', 'trending', 'new-arrivals', 'wholesale'].includes(category)) {
-            const cat = await Category.findOne({ $or: [{ slug: category }, { _id: category }] })
-            if (cat) filter.category = cat._id
+            const catQuery = mongoose.Types.ObjectId.isValid(category) 
+                ? { $or: [{ slug: category }, { _id: category }] }
+                : { slug: category };
+            const cat = await Category.findOne(catQuery);
+            if (cat) filter.category = cat._id;
         }
 
         // Special slug handling
@@ -31,7 +34,14 @@ exports.getProducts = async (req, res) => {
         }
 
         // Search
-        if (q) filter.$text = { $search: q }
+        if (q) {
+            const regex = new RegExp(q, 'i')
+            filter.$or = [
+                { name: regex },
+                { description: regex },
+                { tags: regex }
+            ]
+        }
 
         // Price range
         if (minPrice || maxPrice) {
@@ -72,8 +82,9 @@ exports.getProducts = async (req, res) => {
             const vendorProducts = []
             
             for (const shop of shops) {
+                const shopMatches = regex.test(shop.name) || regex.test(shop.businessName)
                 const matches = (shop.products || []).filter(p => 
-                    p.name && (regex.test(p.name) || regex.test(p.category || ''))
+                    shopMatches || (p.name && (regex.test(p.name) || regex.test(p.category || '')))
                 )
                 for (const vp of matches) {
                     vendorProducts.push({
@@ -109,10 +120,18 @@ exports.searchProducts = async (req, res) => {
         const { q, limit = 6 } = req.query
         if (!q || q.trim().length < 2) return res.json({ success: true, products: [] })
 
+        const regex = new RegExp(q, 'i')
         const products = await Product.find(
-            { $text: { $search: q }, isActive: true },
-            { score: { $meta: 'textScore' }, name: 1, images: 1, 'variants.retailPrice': 1, category: 1 }
-        ).sort({ score: { $meta: 'textScore' } }).limit(Number(limit)).populate('category', 'name')
+            { 
+                $or: [
+                    { name: regex },
+                    { description: regex },
+                    { tags: regex }
+                ],
+                isActive: true 
+            },
+            { name: 1, images: 1, 'variants.retailPrice': 1, category: 1 }
+        ).limit(Number(limit)).populate('category', 'name')
 
         res.json({ success: true, products })
     } catch (err) {
@@ -133,7 +152,46 @@ exports.getProduct = async (req, res) => {
             product = await Product.findOne({ slug: id, isActive: true }).populate('category', 'name slug').populate('reviews.user', 'name');
         }
 
-        if (!product || !product.isActive) return res.status(404).json({ success: false, message: 'Product not found' })
+        if (!product || !product.isActive) {
+            if (mongoose.Types.ObjectId.isValid(id)) {
+                const Shop = require('../models/Shop');
+                const shop = await Shop.findOne({ "products._id": id });
+                if (shop) {
+                    const vp = shop.products.id(id);
+                    if (vp) {
+                        return res.json({
+                            success: true,
+                            product: {
+                                _id: vp._id,
+                                name: vp.name,
+                                description: `Sold by ${shop.name} - ${shop.description || 'A local trader.'}`,
+                                brand: shop.name,
+                                category: { name: vp.category || 'General', slug: 'shops' },
+                                images: [{ url: vp.imageUrl || `https://picsum.photos/seed/${vp._id}/800/800`, alt: vp.name }],
+                                variants: [{
+                                    sku: `VP-${vp._id}`,
+                                    retailPrice: vp.price,
+                                    originalPrice: vp.price,
+                                    wholesalePrices: { low: vp.price, mid: vp.price * 0.95, high: vp.price * 0.9 },
+                                    stock: vp.quantity,
+                                    color: null,
+                                    size: null
+                                }],
+                                ratings: { avg: shop.rating || 5.0, count: shop.reviews || 0 },
+                                reviews: [],
+                                deliveryDays: 3,
+                                gstRate: 12,
+                                hsn: '12345678',
+                                _vendorShopId: shop._id,
+                                type: 'vendor',
+                                isActive: true
+                            }
+                        });
+                    }
+                }
+            }
+            return res.status(404).json({ success: false, message: 'Product not found' })
+        }
         res.json({ success: true, product })
     } catch (err) {
         res.status(500).json({ success: false, message: err.message })

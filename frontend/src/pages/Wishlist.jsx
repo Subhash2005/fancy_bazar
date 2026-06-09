@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { FiHeart, FiTrash2, FiShoppingCart } from 'react-icons/fi'
 import { toggleWishlist } from '../store/slices/wishlistSlice'
 import ProductCard from '../components/products/ProductCard'
@@ -12,6 +12,7 @@ export default function Wishlist() {
     const { items: wishedIds } = useSelector(state => state.wishlist)
     const [products, setProducts] = useState([])
     const [loading, setLoading] = useState(false)
+    const navigate = useNavigate()
 
     useEffect(() => {
         if (wishedIds.length === 0) {
@@ -39,7 +40,8 @@ export default function Wishlist() {
     return (
         <div className="orders-page">
             <div className="container">
-                <div className="section-header" style={{ marginBottom: 30 }}>
+                <div className="section-header" style={{ marginBottom: 30, display: 'flex', alignItems: 'flex-start', flexDirection: 'column', gap: '8px' }}>
+                    <button onClick={() => navigate(-1)} className="btn btn-ghost btn-sm" style={{ padding: '0 8px', height: '24px', minHeight: 'auto', display: 'flex', alignItems: 'center', alignSelf: 'flex-start', marginBottom: '8px' }}>← Back</button>
                     <h1 className="orders-title" style={{ margin: 0 }}>
                         <FiHeart style={{ color: '#EF4444', marginRight: 12 }} />
                         My Wishlist ({wishedIds.length})

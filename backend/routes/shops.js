@@ -21,7 +21,6 @@ function auth(req, res, next) {
 router.get('/', async (req, res) => {
     try {
         const shops = await Shop.find({ isActive: true })
-            .select('-products')
             .populate('owner', 'name businessName')
             .sort({ createdAt: -1 })
         res.json({ success: true, shops })
@@ -76,6 +75,35 @@ router.get('/my/shop', auth, async (req, res) => {
     try {
         const shop = await Shop.findOne({ owner: req.user.id })
         res.json({ success: true, shop: shop || null })
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message })
+    }
+})
+
+// GET /api/v1/shops/my/orders — vendor gets their orders (MUST be before /:id)
+router.get('/my/orders', auth, async (req, res) => {
+    try {
+        const shop = await Shop.findOne({ owner: req.user.id })
+        if (!shop) return res.status(404).json({ success: false, message: 'Shop not found' })
+
+        const Order = require('../models/Order')
+        const orders = await Order.find({ 'items.shopId': shop._id })
+            .populate('user', 'name email phone')
+            .sort({ createdAt: -1 })
+            .lean()
+
+        // Filter items to only show the ones belonging to this shop
+        for (const order of orders) {
+            order.items = order.items.filter(i => i.shopId?.toString() === shop._id.toString())
+            for (const item of order.items) {
+                const vp = shop.products.find(p => p._id.toString() === item.product.toString())
+                if (vp) {
+                    item.product = { _id: vp._id, name: vp.name, images: [{ url: vp.imageUrl }] }
+                }
+            }
+        }
+
+        res.json({ success: true, orders })
     } catch (err) {
         res.status(500).json({ success: false, message: err.message })
     }

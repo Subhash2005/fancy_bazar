@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 import { FiInstagram, FiTwitter, FiFacebook, FiYoutube, FiMail, FiPhone, FiMapPin } from 'react-icons/fi'
 import './Footer.css'
 
 const LINKS = {
     Shop: [
-        { label: 'Hair Accessories', to: '/categories/hair-accessories' },
-        { label: 'Jewellery', to: '/categories/jewellery' },
-        { label: 'Bags & Purses', to: '/categories/bags-purses' },
+        { label: 'Writing Instruments', to: '/categories/writing-instruments' },
+        { label: 'Paper Products', to: '/categories/paper-products' },
+        { label: 'Office Supplies', to: '/categories/office-supplies' },
+        { label: 'Art & Craft', to: '/categories/art-craft' },
         { label: 'Wholesale', to: '/categories/wholesale' },
         { label: 'New Arrivals', to: '/categories/new-arrivals' },
         { label: 'Trending', to: '/categories/trending' },
@@ -32,9 +34,12 @@ const LINKS = {
 const PAYMENTS = ['UPI', 'Visa', 'Mastercard', 'Wallet', 'COD']
 
 export default function Footer() {
+    const { user } = useSelector(state => state.auth)
+    const isTrader = user && ['vendor', 'trader_low', 'trader_bulk'].includes(user.role)
+
     return (
         <footer className="footer" role="contentinfo">
-            <div className="footer__top container">
+            <div className={`footer__top container ${isTrader ? 'footer__top--trader' : ''}`}>
                 {/* Brand */}
                 <div className="footer__brand">
                     <Link to="/" className="footer__logo" aria-label="FancyBazaar">
@@ -50,10 +55,13 @@ export default function Footer() {
                         </svg>
                         <span className="footer__brand-name">FancyBazaar</span>
                     </Link>
-                    <p className="footer__tagline">Every Fancy Thing. Delivered.</p>
+                    <p className="footer__tagline">
+                        {isTrader ? 'Empowering Your Business.' : 'Every Fancy Thing. Delivered.'}
+                    </p>
                     <p className="footer__desc">
-                        India's premium online marketplace for fancy accessories, jewellery, bags, and more —
-                        catering to both retail shoppers and wholesale businesses.
+                        {isTrader 
+                            ? "India's premium marketplace for traders. Manage your shop, analyze the market, and grow your business."
+                            : "India's premium online marketplace for fancy accessories, jewellery, bags, and more — catering to both retail shoppers and wholesale businesses."}
                     </p>
                     <div className="footer__socials" aria-label="Social media links">
                         <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="footer__social-btn" aria-label="Instagram">
@@ -72,18 +80,21 @@ export default function Footer() {
                 </div>
 
                 {/* Links */}
-                {Object.entries(LINKS).map(([section, links]) => (
-                    <div key={section} className="footer__col">
-                        <h3 className="footer__col-title">{section}</h3>
-                        <ul className="footer__col-links">
-                            {links.map(link => (
-                                <li key={link.to}>
-                                    <Link to={link.to} className="footer__link">{link.label}</Link>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                ))}
+                {Object.entries(LINKS).map(([section, links]) => {
+                    if (isTrader && (section === 'Shop' || section === 'Account')) return null;
+                    return (
+                        <div key={section} className="footer__col">
+                            <h3 className="footer__col-title">{section}</h3>
+                            <ul className="footer__col-links">
+                                {links.map(link => (
+                                    <li key={link.to}>
+                                        <Link to={link.to} className="footer__link">{link.label}</Link>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    );
+                })}
 
                 {/* Contact */}
                 <div className="footer__col">
@@ -91,30 +102,32 @@ export default function Footer() {
                     <ul className="footer__contact-list">
                         <li>
                             <FiMail size={14} aria-hidden="true" />
-                            <a href="mailto:support@fancybazaar.in" className="footer__link">support@fancybazaar.in</a>
+                            <a href="mailto:subhash1422005s@gmail.com" className="footer__link">subhash1422005s@gmail.com</a>
                         </li>
                         <li>
                             <FiPhone size={14} aria-hidden="true" />
-                            <a href="tel:+919876543210" className="footer__link">+91 98765 43210</a>
+                            <a href="tel:+917695903778" className="footer__link">+91 7695903778</a>
                         </li>
                         <li>
                             <FiMapPin size={14} aria-hidden="true" />
-                            <span className="footer__link-text">Mumbai, Maharashtra, India</span>
+                            <span className="footer__link-text">Vyasarpadi, Chennai</span>
                         </li>
                     </ul>
-                    <div className="footer__newsletter">
-                        <p className="footer__newsletter-label">Get exclusive deals</p>
-                        <form className="footer__newsletter-form" onSubmit={e => { e.preventDefault(); alert('Subscribed!') }}>
-                            <input
-                                type="email"
-                                placeholder="Your email address"
-                                className="form-input footer__newsletter-input"
-                                aria-label="Email for newsletter"
-                                required
-                            />
-                            <button type="submit" className="btn btn-primary btn-sm">Subscribe</button>
-                        </form>
-                    </div>
+                    {!isTrader && (
+                        <div className="footer__newsletter">
+                            <p className="footer__newsletter-label">Get exclusive deals</p>
+                            <form className="footer__newsletter-form" onSubmit={e => { e.preventDefault(); alert('Subscribed!') }}>
+                                <input
+                                    type="email"
+                                    placeholder="Your email address"
+                                    className="form-input footer__newsletter-input"
+                                    aria-label="Email for newsletter"
+                                    required
+                                />
+                                <button type="submit" className="btn btn-primary btn-sm">Subscribe</button>
+                            </form>
+                        </div>
+                    )}
                 </div>
             </div>
 

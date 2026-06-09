@@ -152,9 +152,10 @@ export default function Login() {
                 </form>
 
                 <div className="auth-divider"><span>Don't have an account?</span></div>
-                <div className="auth-links">
+                <div className="auth-links" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                     <Link to="/auth/register" className="btn btn-secondary btn-full">Create Customer Account</Link>
-                    <Link to="/auth/register-wholesale" className="btn btn-ghost btn-full">Create Merchant Account 🏪</Link>
+                    <Link to="/auth/register-wholesale?type=merchant" className="btn btn-ghost btn-full">Create Merchant Account 🛍️</Link>
+                    <Link to="/auth/register-wholesale?type=trader" className="btn btn-ghost btn-full">Create Trader Account 🏪</Link>
                 </div>
             </div>
         </div>

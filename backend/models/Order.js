@@ -1,7 +1,9 @@
 const mongoose = require('mongoose')
 
 const orderItemSchema = new mongoose.Schema({
-    product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
+    product: { type: mongoose.Schema.Types.ObjectId, required: true },
+    isVendorProduct: { type: Boolean, default: false },
+    shopId: { type: mongoose.Schema.Types.ObjectId, ref: 'Shop' },
     variant: String, // SKU
     qty: { type: Number, required: true, min: 1 },
     unitPrice: { type: Number, required: true },
